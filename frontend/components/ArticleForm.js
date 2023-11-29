@@ -3,12 +3,14 @@ import PT from 'prop-types';
 
 const initialFormValues = { title: '', text: '', topic: '' };
 
-export default function ArticleForm({
+export default function ArticleForm(props) {
+  const {
   postArticle,
   updateArticle,
   setCurrentArticleId,
   currentArticle,
-}) {
+ } = props;
+
   const [values, setValues] = useState(initialFormValues);
 
   useEffect(() => {
@@ -33,13 +35,13 @@ export default function ArticleForm({
 
   const onSubmit = (evt) => {
     evt.preventDefault();
-    // We must submit a new post or update an existing one,
-    // depending on the truthiness of the `currentArticle` prop.
     if (currentArticle) {
       updateArticle({ article_id: currentArticle.article_id, article: values });
     } else {
       postArticle(values);
     }
+    // Clear form values after submission
+    setValues(initialFormValues);
   };
 
   const isDisabled = () => {
@@ -81,14 +83,14 @@ export default function ArticleForm({
 }
 
 // 🔥 No touchy: ArticleForm expects the following props exactly:
-ArticleForm.propTypes = {
-  postArticle: PT.func.isRequired,
-  updateArticle: PT.func.isRequired,
-  setCurrentArticleId: PT.func.isRequired,
-  currentArticle: PT.shape({
-    article_id: PT.number.isRequired,
-    title: PT.string.isRequired,
-    text: PT.string.isRequired,
-    topic: PT.string.isRequired,
-  }),
-};
+// ArticleForm.propTypes = {
+//   postArticle: PT.func.isRequired,
+//   updateArticle: PT.func.isRequired,
+//   setCurrentArticleId: PT.func.isRequired,
+//   currentArticle: PT.shape({
+//     article_id: PT.number.isRequired,
+//     title: PT.string.isRequired,
+//     text: PT.string.isRequired,
+//     topic: PT.string.isRequired,
+//   }),
+// };

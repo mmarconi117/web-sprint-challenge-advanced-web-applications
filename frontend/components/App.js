@@ -93,7 +93,7 @@ export default function App() {
     setSpinnerOn(true); // Turn on the spinner
     // Launch an authenticated request to the create article endpoint
     axiosWithAuth()
-      .post(`http://localhost:9000/api/articles`, articles)
+      .post(`http://localhost:9000/api/articles`, article)
       .then((response) => {
         console.log(response);
         // Handle success, possibly update the articles state or show a success message
@@ -138,28 +138,28 @@ export default function App() {
   };
 
   const deleteArticle = (article_id) => {
-    // ✨ implement
-    setMessage(''); // Flush the message state
-    setSpinnerOn(true); // Turn on the spinner
-    // Launch an authenticated request to the delete article endpoint
+    setMessage('');
+    setSpinnerOn(true);
+
     axiosWithAuth()
       .delete(`http://localhost:9000/api/articles/${article_id}`)
       .then((response) => {
         console.log(response.data);
-        // Handle success, possibly update the articles state or show a success message
         setMessage('Article deleted successfully');
-        setSpinnerOn(false); // Turn off the spinner
-        // You may want to fetch articles again after deletion
-        getArticles();
+        setSpinnerOn(false);
+
+        // Update local state to remove the deleted article
+        setArticles((prevArticles) =>
+          prevArticles.filter((article) => article.article_id !== article_id)
+        );
       })
       .catch((error) => {
         console.error(error);
         if (error.response && error.response.status === 401) {
-          // Token might have gone bad, redirect to login
           redirectToLogin();
         } else {
-          setMessage('Error deleting article'); // Set an error message
-          setSpinnerOn(false); // Turn off the spinner
+          setMessage('Error deleting article');
+          setSpinnerOn(false);
         }
       });
   };
