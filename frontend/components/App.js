@@ -20,85 +20,115 @@ import PT from 'prop-types';
 
 export default function App() {
   // ✨ MVP can be achieved with these states
-    const [message, setMessage] = useState('');
-    const [articles, setArticles] = useState([]);
-    const [currentArticleId, setCurrentArticleId] = useState();
-    const [spinnerOn, setSpinnerOn] = useState(false);
+  // ✨ MVP can be achieved with these states
+  // ✨ Research `useNavigate` in React Router v.6
+  const [message, setMessage] = useState('');
+  const [articles, setArticles] = useState([]);
+  const [currentArticleId, setCurrentArticleId] = useState();
+  const [spinnerOn, setSpinnerOn] = useState(false);
+  const navigate = useNavigate();
 
 
+  const redirectToArticles = () => {
+    navigate('/articles');
+  };
 
-    const navigate = useNavigate();
+  // ✨ implement
+  // If a token is in local storage it should be removed,
+  // and a message saying "Goodbye!" should be set in its proper state.
+  // In any case, we should redirect the browser back to the login screen,
+  // using the helper above.
+  const logout = () => {
+    localStorage.removeItem('token');
+    setMessage('Goodbye!');
+    redirectToArticles();
+  };
 
-    const redirectToLogin = () => {
-      navigate('/');
-    };
+  // ✨ implement
+  // We should flush the message state, turn on the spinner
+  // and launch a request to the proper endpoint.
+  // On success, we should set the token to local storage in a 'token' key,
+  // put the server success message in its proper state, and redirect
+  // to the Articles screen. Don't forget to turn off the spinner!
+  const login = ({ username, password }) => {
+    setMessage('');
+    setSpinnerOn(true);
 
-    const redirectToArticles = () => {
-      navigate('/articles');
-    };
+    axios
+      .post('http://localhost:9000/api/login', { username, password })
+      .then((response) => {
+        const token = response.data.token;
+        console.log(token);
+        localStorage.setItem('token', token);
+        setMessage(response.data.message);
+        setSpinnerOn(false);
+        redirectToArticles();
+      })
+      .catch((error) => {
+        console.error(error);
+        setMessage('Login failed');
+        setSpinnerOn(false);
+      });
+  };
 
-    const logout = () => {
-      localStorage.removeItem('token');
-      setMessage('Goodbye!');
-      redirectToLogin();
-    };
+  // ✨ implement
+  // We should flush the message state, turn on the spinner
+  // and launch an authenticated request to the proper endpoint.
+  // On success, we should set the articles in their proper state and
+  // put the server success message in its proper state.
+  // If something goes wrong, check the status of the response:
+  // if it's a 401 the token might have gone bad, and we should redirect to login.
+  // Don't forget to turn off the spinner!
+  const getArticles = () => {
+    setMessage('');
+    setSpinnerOn(true);
 
-    const login = ({ username, password }) => {
-      setMessage('');
-      setSpinnerOn(true);
-
-      axios.post('http://localhost:9000/api/login', { username, password })
-        .then((response) => {
-          const token = response.data.token;
-          console.log(token)
-          localStorage.setItem('token', token);
-          setMessage(response.data.message);
+    axiosWithAuth()
+      .get('http://localhost:9000/api/articles') // Adjust the endpoint based on your API
+      .then((response) => {
+        console.log('API Response:', response.data);
+        const { articles } = response.data;
+        setArticles(articles);
+        setMessage(response.data.message);
+        setSpinnerOn(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        if (error.response && error.response.status === 401) {
+          redirectToLogin();
+        } else {
+          setMessage('Error fetching articles');
           setSpinnerOn(false);
-          redirectToArticles();
-        })
-        .catch((error) => {
-          console.error(error);
-          setMessage('Login failed');
-          setSpinnerOn(false);
-        });
-    };
+        }
+      });
+  };
 
-
-    const getArticles = () => {
-      setMessage('');
-      setSpinnerOn(true);
-
-      axiosWithAuth()
-        .get('http://localhost:9000/api/articles')  // Adjust the endpoint based on your API
-        .then((response) => {
-          console.log(response)
-          setArticles(response.data);
-          setMessage(response.data.message);
-          setSpinnerOn(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          if (error.response && error.response.status === 401) {
-            redirectToLogin();
-          } else {
-            setMessage('Error fetching articles');
-            setSpinnerOn(false);
-          }
-        });
-    };
-
+  // ✨ implement
+  // The flow is very similar to the `getArticles` function.
+  // You'll know what to do! Use log statements or breakpoints
+  // to inspect the response from the server.
   const postArticle = (article) => {
-    // ✨ implement
-    setMessage(''); // Flush the message state
-    setSpinnerOn(true); // Turn on the spinner
-    // Launch an authenticated request to the create article endpoint
+    setMessage('');
+    setSpinnerOn(true);
+
     axiosWithAuth()
       .post(`http://localhost:9000/api/articles`, article)
       .then((response) => {
         console.log(response);
-        // Handle success, possibly update the articles state or show a success message
-        setMessage('Article posted successfully');
-        setSpinnerOn(false); // Turn off the spinner
+        // Check if the response contains the expected structure
+        if (response.data && response.data.article && response.data.article.article_id) {
+          // Add the new article to the state with the correct article_id
+          setArticles((prevArticles) => [...prevArticles, response.data.article]);
+          // Display success message
+          setMessage(response.data.message || 'Article posted successfully');
+          // Turn off the spinner
+          setSpinnerOn(false);
+        } else {
+          // Handle the case where the response doesn't contain the expected structure
+          console.error('Invalid response structure:', response);
+          setMessage('Error posting article');
+          setSpinnerOn(false);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -106,14 +136,20 @@ export default function App() {
           // Token might have gone bad, redirect to login
           redirectToLogin();
         } else {
-          setMessage('Error posting article'); // Set an error message
-          setSpinnerOn(false); // Turn off the spinner
+          // Display an error message
+          setMessage('Error posting article');
+          // Turn off the spinner
+          setSpinnerOn(false);
         }
       });
   };
 
+
+
+
+  // ✨ implement
+  // You got this!
   const updateArticle = ({ article_id, article }) => {
-    // ✨ implement
     setMessage(''); // Flush the message state
     setSpinnerOn(true); // Turn on the spinner
     // Launch an authenticated request to the update article endpoint
@@ -137,6 +173,7 @@ export default function App() {
       });
   };
 
+  // ✨ implement
   const deleteArticle = (article_id) => {
     setMessage('');
     setSpinnerOn(true);
@@ -164,6 +201,8 @@ export default function App() {
       });
   };
 
+  // ... (the rest of the component)
+
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
@@ -182,14 +221,15 @@ export default function App() {
             path="articles"
             element={
               <>
-                <ArticleForm postArticle={postArticle}
-                updateArticle={updateArticle}
-                setCurrentArticleId={setCurrentArticleId}
-                getArticles={getArticles}
-
+                <ArticleForm
+                  postArticle={postArticle}
+                  updateArticle={updateArticle}
+                  setCurrentArticleId={setCurrentArticleId}
+                  getArticles={getArticles}
                 />
+                {/* Ensure that `articles` is an array when passing it to the Articles component */}
                 <Articles
-                  articles={articles}
+                  articles={articles} // Make sure `articles` is an array
                   updateArticle={updateArticle}
                   deleteArticle={deleteArticle}
                   getArticles={getArticles}
@@ -204,3 +244,34 @@ export default function App() {
     </>
   );
 }
+
+
+
+// ✨ MVP can be achieved with these states
+// ✨ Research `useNavigate` in React Router v.6
+// ✨ implement
+// If a token is in local storage it should be removed,
+// and a message saying "Goodbye!" should be set in its proper state.
+// In any case, we should redirect the browser back to the login screen,
+// using the helper above.
+// ✨ implement
+// We should flush the message state, turn on the spinner
+// and launch a request to the proper endpoint.
+// On success, we should set the token to local storage in a 'token' key,
+// put the server success message in its proper state, and redirect
+// to the Articles screen. Don't forget to turn off the spinner!
+// ✨ implement
+// We should flush the message state, turn on the spinner
+// and launch an authenticated request to the proper endpoint.
+// On success, we should set the articles in their proper state and
+// put the server success message in its proper state.
+// If something goes wrong, check the status of the response:
+// if it's a 401 the token might have gone bad, and we should redirect to login.
+// Don't forget to turn off the spinner!
+// ✨ implement
+// The flow is very similar to the `getArticles` function.
+// You'll know what to do! Use log statements or breakpoints
+// to inspect the response from the server.
+// ✨ implement
+// You got this!
+// ✨ implement

@@ -53,3 +53,10 @@ export default function LoginForm({ login }) {
 LoginForm.propTypes = {
   login: PT.func.isRequired,
 };
+
+// ✨ where are my props? Destructure them here
+// ✨ implement
+// ✨ implement
+// Trimmed username must be >= 3, and
+// trimmed password must be >= 8 for
+// the button to become enabled

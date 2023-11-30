@@ -3,21 +3,16 @@ import PT from 'prop-types';
 
 const initialFormValues = { title: '', text: '', topic: '' };
 
-export default function ArticleForm(props) {
-  const {
+export default function ArticleForm({
   postArticle,
   updateArticle,
   setCurrentArticleId,
   currentArticle,
- } = props;
-
+}) {
   const [values, setValues] = useState(initialFormValues);
 
   useEffect(() => {
-    // Every time the `currentArticle` prop changes, we should check it for truthiness:
-    // if it's truthy, we should set its title, text, and topic into the corresponding
-    // values of the form. If it's not, we should reset the form back to initial values.
-    if (currentArticle) {
+    if (currentArticle && Object.keys(currentArticle).length > 0) {
       setValues({
         title: currentArticle.title,
         text: currentArticle.text,
@@ -35,37 +30,25 @@ export default function ArticleForm(props) {
 
   const onSubmit = (evt) => {
     evt.preventDefault();
-    if (currentArticle) {
+
+    if (currentArticle && Object.keys(currentArticle).length > 0) {
       updateArticle({ article_id: currentArticle.article_id, article: values });
     } else {
       postArticle(values);
     }
-    // Clear form values after submission
+
     setValues(initialFormValues);
   };
 
   const isDisabled = () => {
-    // Make sure the inputs have some values
     return Object.values(values).some((value) => !value.trim());
   };
 
   return (
     <form id="form" onSubmit={onSubmit}>
       <h2>{currentArticle ? 'Edit' : 'Create'} Article</h2>
-      <input
-        maxLength={50}
-        onChange={onChange}
-        value={values.title}
-        placeholder="Enter title"
-        id="title"
-      />
-      <textarea
-        maxLength={200}
-        onChange={onChange}
-        value={values.text}
-        placeholder="Enter text"
-        id="text"
-      />
+      <input maxLength={50} onChange={onChange} value={values.title} placeholder="Enter title" id="title" />
+      <textarea maxLength={200} onChange={onChange} value={values.text} placeholder="Enter text" id="text" />
       <select onChange={onChange} id="topic" value={values.topic}>
         <option value="">-- Select topic --</option>
         <option value="JavaScript">JavaScript</option>
@@ -82,15 +65,14 @@ export default function ArticleForm(props) {
   );
 }
 
-// 🔥 No touchy: ArticleForm expects the following props exactly:
-// ArticleForm.propTypes = {
-//   postArticle: PT.func.isRequired,
-//   updateArticle: PT.func.isRequired,
-//   setCurrentArticleId: PT.func.isRequired,
-//   currentArticle: PT.shape({
-//     article_id: PT.number.isRequired,
-//     title: PT.string.isRequired,
-//     text: PT.string.isRequired,
-//     topic: PT.string.isRequired,
-//   }),
-// };
+ArticleForm.propTypes = {
+  postArticle: PT.func.isRequired,
+  updateArticle: PT.func.isRequired,
+  setCurrentArticleId: PT.func.isRequired,
+  currentArticle: PT.shape({
+    article_id: PT.number,
+    title: PT.string.isRequired,
+    text: PT.string.isRequired,
+    topic: PT.string.isRequired,
+  }),
+};
