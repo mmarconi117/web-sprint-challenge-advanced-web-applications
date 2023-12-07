@@ -27,6 +27,7 @@ export default function App() {
   const [currentArticleId, setCurrentArticleId] = useState();
   const [spinnerOn, setSpinnerOn] = useState(false);
   const navigate = useNavigate();
+  const currentArticle = articles.find(article => article.article_id === currentArticleId);
 
 
   const redirectToArticles = () => {
@@ -59,16 +60,19 @@ export default function App() {
       .then((response) => {
         const token = response.data.token;
         console.log(token);
-        localStorage.setItem('token', token);
+        window.localStorage.setItem('token', token);
         setMessage(response.data.message);
-        setSpinnerOn(false);
+        // setSpinnerOn(false);
         redirectToArticles();
       })
       .catch((error) => {
         console.error(error);
         setMessage('Login failed');
+        // setSpinnerOn(false);
+      })
+      .finally(() => {
         setSpinnerOn(false);
-      });
+      })
   };
 
   // ✨ implement
@@ -111,20 +115,23 @@ export default function App() {
     setMessage('');
     setSpinnerOn(true);
 
+    // Check if the article is empty before making the request
+    if (!article.title.trim() || !article.text.trim() || !article.topic.trim()) {
+      setMessage('Please fill out all fields');
+      setSpinnerOn(false);
+      return; // Exit the function if the article is empty
+    }
+
     axiosWithAuth()
       .post(`http://localhost:9000/api/articles`, article)
       .then((response) => {
-        console.log(response);
-        // Check if the response contains the expected structure
+        console.log(response.data.article);
         if (response.data && response.data.article && response.data.article.article_id) {
-          // Add the new article to the state with the correct article_id
           setArticles((prevArticles) => [...prevArticles, response.data.article]);
-          // Display success message
           setMessage(response.data.message || 'Article posted successfully');
-          // Turn off the spinner
           setSpinnerOn(false);
+
         } else {
-          // Handle the case where the response doesn't contain the expected structure
           console.error('Invalid response structure:', response);
           setMessage('Error posting article');
           setSpinnerOn(false);
@@ -133,16 +140,16 @@ export default function App() {
       .catch((error) => {
         console.error(error);
         if (error.response && error.response.status === 401) {
-          // Token might have gone bad, redirect to login
           redirectToLogin();
         } else {
-          // Display an error message
           setMessage('Error posting article');
-          // Turn off the spinner
           setSpinnerOn(false);
         }
       });
   };
+
+
+
 
 
 
@@ -152,26 +159,42 @@ export default function App() {
   const updateArticle = ({ article_id, article }) => {
     setMessage(''); // Flush the message state
     setSpinnerOn(true); // Turn on the spinner
-    // Launch an authenticated request to the update article endpoint
+
     axiosWithAuth()
       .put(`http://localhost:9000/api/articles/${article_id}`, article)
       .then((response) => {
         console.log(response.data);
-        // Handle success, possibly update the articles state or show a success message
+
+        // Update the local state with the edited article
+        setArticles(prevArticles =>
+          prevArticles.map(prevArticle =>
+            prevArticle.article_id === article_id ? response.data.article : prevArticle
+          )
+        );
+
         setMessage('Article updated successfully');
-        setSpinnerOn(false); // Turn off the spinner
+        setSpinnerOn(false);
       })
       .catch((error) => {
         console.error(error);
         if (error.response && error.response.status === 401) {
           // Token might have gone bad, redirect to login
           redirectToLogin();
+        } else if (error.response && error.response.status === 422) {
+          // Handle validation error (422) - Display error message or log details
+          setMessage('Validation error. Please check your input.');
+          setSpinnerOn(false);
         } else {
-          setMessage('Error updating article'); // Set an error message
-          setSpinnerOn(false); // Turn off the spinner
+          setMessage('Error updating article');
+          setSpinnerOn(false);
         }
       });
   };
+
+
+
+
+
 
   // ✨ implement
   const deleteArticle = (article_id) => {
@@ -201,7 +224,7 @@ export default function App() {
       });
   };
 
-  // ... (the rest of the component)
+
 
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
@@ -226,6 +249,7 @@ export default function App() {
                   updateArticle={updateArticle}
                   setCurrentArticleId={setCurrentArticleId}
                   getArticles={getArticles}
+                  currentArticle={currentArticle}
                 />
                 {/* Ensure that `articles` is an array when passing it to the Articles component */}
                 <Articles

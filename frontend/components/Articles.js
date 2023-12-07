@@ -37,6 +37,7 @@ export default function Articles({
               >
                 Edit
               </button>
+
               <button onClick={() => deleteArticle(art.article_id)}>Delete</button>
             </div>
           </div>

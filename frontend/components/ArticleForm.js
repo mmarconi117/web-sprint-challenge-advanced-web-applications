@@ -23,6 +23,7 @@ export default function ArticleForm({
     }
   }, [currentArticle]);
 
+
   const onChange = (evt) => {
     const { id, value } = evt.target;
     setValues({ ...values, [id]: value });
@@ -31,7 +32,7 @@ export default function ArticleForm({
   const onSubmit = (evt) => {
     evt.preventDefault();
 
-    if (currentArticle && Object.keys(currentArticle).length > 0) {
+    if (currentArticle && currentArticle.article_id) {
       updateArticle({ article_id: currentArticle.article_id, article: values });
     } else {
       postArticle(values);
@@ -39,6 +40,7 @@ export default function ArticleForm({
 
     setValues(initialFormValues);
   };
+
 
   const isDisabled = () => {
     return Object.values(values).some((value) => !value.trim());
