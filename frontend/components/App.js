@@ -176,20 +176,20 @@ export default function App() {
           )
         );
 
-        setMessage('Article updated successfully');
+        setMessage(response.data.message);
         setSpinnerOn(false);
       })
       .catch((error) => {
-        console.error(error);
+        console.log(error.response);
         if (error.response && error.response.status === 401) {
           // Token might have gone bad, redirect to login
           redirectToLogin();
         } else if (error.response && error.response.status === 422) {
           // Handle validation error (422) - Display error message or log details
-          setMessage('Validation error. Please check your input.');
+          setMessage(error.response.message);
           setSpinnerOn(false);
         } else {
-          setMessage('Error updating article');
+          setMessage(error.response.message);
           setSpinnerOn(false);
         }
       });
@@ -209,7 +209,7 @@ export default function App() {
       .delete(`http://localhost:9000/api/articles/${article_id}`)
       .then((response) => {
         console.log(response.data);
-        setMessage('Article deleted successfully');
+        setMessage(response.data.message);
         setSpinnerOn(false);
 
         // Update local state to remove the deleted article

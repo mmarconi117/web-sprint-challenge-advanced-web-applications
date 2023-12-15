@@ -21,8 +21,8 @@ const StyledSpinner = styled.div`
   }
 `;
 
-function Spinner({ on }) {
-  if (!on) return null;
+function Spinner({ loading }) {
+  if (!loading) return null;
   return (
     <StyledSpinner id="spinner">
       <h3>&nbsp;.</h3>&nbsp;&nbsp;&nbsp;Please wait...
