@@ -71,7 +71,7 @@ export default function App() {
       })
       .catch((error) => {
         console.error(error);
-        setMessage('Login failed');
+        setMessage(error.data.message);
         // setSpinnerOn(false);
       })
       .finally(() => {
@@ -132,21 +132,21 @@ export default function App() {
         console.log(response.data.article);
         if (response.data && response.data.article && response.data.article.article_id) {
           setArticles((prevArticles) => [...prevArticles, response.data.article]);
-          setMessage(response.data.message || 'Article posted successfully');
+          setMessage(response.data.message);
           setSpinnerOn(false);
 
-        } else {
-          console.error('Invalid response structure:', response);
-          setMessage('Error posting article');
-          setSpinnerOn(false);
-        }
+        }// } else {
+        //   console.error('Invalid response structure:', response);
+        //   setMessage(error.data.message);
+        //   setSpinnerOn(false);
+        // }
       })
       .catch((error) => {
         console.error(error);
         if (error.response && error.response.status === 401) {
           redirectToLogin();
         } else {
-          setMessage('Error posting article');
+          setMessage(error.data.message);
           setSpinnerOn(false);
         }
       });
@@ -170,13 +170,13 @@ export default function App() {
         console.log(response.data);
 
         // Update the local state with the edited article
-        setArticles(prevArticles =>
-          prevArticles.map(prevArticle =>
+        setArticles((prevArticles) =>
+          prevArticles.map((prevArticle) =>
             prevArticle.article_id === article_id ? response.data.article : prevArticle
           )
         );
 
-        setMessage(response.data.message);
+        setMessage(response.data.message); // Use the response message here
         setSpinnerOn(false);
       })
       .catch((error) => {
@@ -184,16 +184,17 @@ export default function App() {
         if (error.response && error.response.status === 401) {
           // Token might have gone bad, redirect to login
           redirectToLogin();
-        } else if (error.response && error.response.status === 422) {
-          // Handle validation error (422) - Display error message or log details
-          setMessage(error.response.message);
-          setSpinnerOn(false);
-        } else {
-          setMessage(error.response.message);
+        }// } else if (error.response && error.response.status === 422) {
+        //   // Handle validation error (422) - Display error message or log details
+        //   setMessage(error.data.message); // Use the error response message here
+        //   setSpinnerOn(false);
+         else {
+          setMessage(error.data.message); // Set a default error message
           setSpinnerOn(false);
         }
       });
   };
+
 
 
 
